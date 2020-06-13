@@ -3,14 +3,14 @@ package app
 import (
 	"os"
 
-	"github.com/tpphu/gobox/container"
-	"github.com/tpphu/gobox/logger"
-	"github.com/tpphu/gobox/service"
-	"github.com/tpphu/gobox/helper"
-	"github.com/tpphu/gobox/service/http"
-	cli "github.com/urfave/cli/v2"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"github.com/tpphu/gobox/container"
+	"github.com/tpphu/gobox/helper"
+	"github.com/tpphu/gobox/logger"
+	"github.com/tpphu/gobox/service"
+	"github.com/tpphu/gobox/service/http"
+	cli "github.com/urfave/cli/v2"
 )
 
 // App is main application of gobox
@@ -20,6 +20,7 @@ type App struct {
 	Services    []service.Runable
 	Container   *container.Container
 	Log         *logger.Logger
+	Flag 		*AppFlagSet
 }
 
 func (a *App) Init() {
@@ -81,6 +82,13 @@ func NewApp(opts ...Option) *App {
 					Usage: "Migrate data for application",
 					Action: func(c *cli.Context) error {
 						return app.Migrate(c)
+					},
+				},
+				{
+					Name:  "outenv",
+					Usage: "Export env of application",
+					Action: func(c *cli.Context) error {
+						return app.ExportEnv("Example")
 					},
 				},
 			},

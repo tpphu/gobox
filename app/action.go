@@ -1,6 +1,10 @@
 package app
 
-import "github.com/urfave/cli/v2"
+import (
+	"flag"
+	"github.com/urfave/cli/v2"
+	"os"
+)
 
 func (a *App) Up(ctx *cli.Context) error {
 	a.Log.Info("Application is up")
@@ -19,5 +23,12 @@ func (a *App) Seed(ctx *cli.Context) error {
 
 func (a *App) Migrate(ctx *cli.Context) error {
 	a.Log.Info("Application is migrating schema")
+	return nil
+}
+
+func (a *App) ExportEnv(name string) error {
+	a.Flag = newFlagSet(name, flag.CommandLine)
+	a.Flag.Parse(name)
+	os.Exit(1)
 	return nil
 }
