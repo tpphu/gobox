@@ -1,7 +1,9 @@
 package service
 
+import "context"
+
 type Runable interface {
 	Init()
-	Run()
-	Shutdown()
+	Run() error
+	Shutdown(ctx context.Context) error
 }

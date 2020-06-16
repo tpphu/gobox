@@ -15,7 +15,7 @@ func main() {
 	app := app.NewApp(
 		app.Name("test"),
 		app.Description("test"),
-		app.WithHTTPService(":3000"))
+		app.WithHTTPService(":3000"),)
 	app.Init()
 	httpService := app.GetHTTPService()
 	product  := &handler.Product{}

@@ -1,8 +1,12 @@
 package app
 
 import (
+	"context"
+	"log"
 	"os"
-
+	"os/signal"
+	"syscall"
+	"time"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/tpphu/gobox/container"
@@ -21,6 +25,7 @@ type App struct {
 	Container   *container.Container
 	Log         *logger.Logger
 	Flag 		*AppFlagSet
+	stopChan 	chan os.Signal
 }
 
 func (a *App) Init() {
@@ -31,7 +36,30 @@ func (a *App) Init() {
 
 func (a *App) Run() {
 	a.App.Run(os.Args)
-	a.runHttpService()
+	go func() {
+		if err := a.runHttpService(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+	// kill (no param) default send syscall.SIGTERM
+	// kill -2 is syscall.SIGINT
+	// kill -9 is syscall.SIGKILL but can't be catch, so don't need add it
+	signal.Notify(a.stopChan, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
+
+	<-a.stopChan
+	log.Println("Shutting down server...")
+	// The context is used to inform the server it has 5 seconds to finish
+	// the request it is currently handling
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := a.httpService.Shutdown(ctx); err != nil {
+		log.Fatal("Server forced to shutdown:", err)
+	}
+	log.Println("Server exiting")
+}
+
+func (a *App) Shutdown() {
+
 }
 
 func (a *App) AddService(s service.Runable) {
@@ -95,6 +123,7 @@ func NewApp(opts ...Option) *App {
 		},
 		Container: container.NewContainer(),
 		Log:       log,
+		stopChan: make(chan os.Signal),
 	}
 	for _, opt := range opts {
 		opt(app)

@@ -20,8 +20,10 @@ func (a *App) initHttpService() {
 	}
 }
 
-func (a *App) runHttpService() {
+func (a *App) runHttpService() error {
 	if a.httpService != nil {
-		a.httpService.Run()
+		return a.httpService.Run()
 	}
+	return nil
 }
+

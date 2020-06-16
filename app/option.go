@@ -1,6 +1,8 @@
 package app
 
-import "github.com/tpphu/gobox/service/http"
+import (
+	"github.com/tpphu/gobox/service/http"
+)
 
 type Option func(a *App)
 
