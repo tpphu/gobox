@@ -6,6 +6,7 @@ import (
 )
 
 var HttpServiceNotYetInjectToApp err.Error = err.Message("Http Service Not Yet Injected To App")
+var GinServiceNotYetInjectToApp err.Error = err.Message("Gin Service Not Yet Injected To App")
 
 func (a *App) GetHTTPService() *http.Http {
 	if a.httpService == nil {

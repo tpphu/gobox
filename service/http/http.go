@@ -3,20 +3,18 @@ package http
 import (
 	"context"
 	"errors"
-	"fmt"
-	"github.com/gin-gonic/gin"
 	"github.com/tpphu/gobox/logger"
 	"github.com/tpphu/gobox/service"
-	"time"
 )
 
 var ErrServerClosed = errors.New("http: Server closed")
 
 type Http struct {
 	service.Runable
-	*gin.Engine
+	*ginService
 	addr   string
 	logger *logger.Logger
+	//*http.Server
 }
 
 type Option func(a *Http)
@@ -34,38 +32,33 @@ func Logger(logger *logger.Logger) Option {
 }
 
 func Default(opts ...Option) *Http {
-	engine := gin.New()
-	http := &Http{}
-	http.Engine = engine
-	http.addr = ":3000"
+	myHttp := &Http{}
+	myHttp.ginService = NewGinService(":3000")
 	for _, opt := range opts {
-		opt(http)
+		opt(myHttp)
 	}
-	return http
+	return myHttp
 }
 
 func (s *Http) Init() {
-	s.Use(logger.HttpLogger(s.logger), gin.Recovery())
-	s.GET("/ping", func(c *gin.Context) {
-		time.Sleep(10 *time.Second)
-		c.String(200, "pong")
-	})
+	if s.ginService != nil  {
+		s.ginService.Init()
+	}
 }
 
 func (s *Http) Run() error {
-	return s.Engine.Run(s.addr)
-}
-
-func (s *Http) Shutdown(ctx context.Context) error {
-	deadline, ok := ctx.Deadline()
-	if ok {
-		fmt.Println("deadline:", deadline)
-
+	if s.ginService != nil  {
+		return s.ginService.Run()
 	}
-	fmt.Println("deadline:", deadline)
 	return nil
 }
 
+func (s *Http) Shutdown(ctx context.Context) error {
+	if s.ginService != nil {
+		return s.ginService.Shutdown(ctx)
+	}
+	return errors.New("no no ")
+}
 
 // add [[route, handler],[route, handler]] = group
 // add [middleware,middleware,middleware...]

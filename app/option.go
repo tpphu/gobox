@@ -25,3 +25,4 @@ func WithHTTPService(address string) Option {
 			http.Logger(a.Log))
 	}
 }
+

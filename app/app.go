@@ -2,12 +2,6 @@ package app
 
 import (
 	"context"
-	"log"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
-	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/tpphu/gobox/container"
 	"github.com/tpphu/gobox/helper"
@@ -15,6 +9,11 @@ import (
 	"github.com/tpphu/gobox/service"
 	"github.com/tpphu/gobox/service/http"
 	cli "github.com/urfave/cli/v2"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
 )
 
 // App is main application of gobox
@@ -24,42 +23,79 @@ type App struct {
 	Services    []service.Runable
 	Container   *container.Container
 	Log         *logger.Logger
+	chSignal chan os.Signal
 	Flag 		*AppFlagSet
-	stopChan 	chan os.Signal
+	mtx *sync.Mutex
 }
-
+/*
 func (a *App) Init() {
-	a.initHttpService()
+	//a.initHttpService()
 	db, _ := gorm.Open("mysql", "root:root@(127.0.0.1:3306)/gomay20?charset=utf8&parseTime=True&loc=Local")
   	a.Container.Set("db", db)
+}*/
+
+func (a *App) startRun() {
+	a.mtx.Lock()
+	defer a.mtx.Unlock()
+
+	runService := func(s service.Runable) {
+		if err := s.Run(); err != nil {
+			a.Shutdown()
+		}
+	}
+	log := a.Log
+	for _, s := range a.Services {
+		runS, ok := s.(service.Runable)
+		if !ok {
+			continue
+		}
+		go func(runS service.Runable) {
+			log.Info("start...")
+			runService(runS)
+		}(runS)
+	}
+
 }
 
 func (a *App) Run() {
 	a.App.Run(os.Args)
-	go func() {
-		if err := a.runHttpService(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
-		}
-	}()
-	// kill (no param) default send syscall.SIGTERM
-	// kill -2 is syscall.SIGINT
-	// kill -9 is syscall.SIGKILL but can't be catch, so don't need add it
-	signal.Notify(a.stopChan, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
+	signal.Notify(a.chSignal, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
+	log := a.Log
+	a.startRun()
 
-	<-a.stopChan
-	log.Println("Shutting down server...")
-	// The context is used to inform the server it has 5 seconds to finish
-	// the request it is currently handling
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := a.httpService.Shutdown(ctx); err != nil {
-		log.Fatal("Server forced to shutdown:", err)
+	for sig := range a.chSignal {
+		switch sig {
+		case syscall.SIGHUP:
+			break
+		default:
+			goto SHUTDOWN
+		}
 	}
-	log.Println("Server exiting")
+
+SHUTDOWN:
+	log.Info("shutdown...")
+	// starting shutting down progress...
+	a.Log.Infof("Server shutting down")
+	a.Shutdown()
 }
 
 func (a *App) Shutdown() {
+	a.mtx.Lock()
+	defer a.mtx.Unlock()
 
+	for i := len(a.Services) - 1; i >= 0; i-- {
+		s := a.Services[i]
+		if runS, ok := s.(service.Runable); ok {
+			// context: wait for 3 seconds
+			ctx, _ := context.WithTimeout(
+				context.Background(),
+				3 * time.Second)
+			// call for shutdown
+			if err := runS.Shutdown(ctx); err != nil {
+				a.Log.Errorf("Server Shutdown failed: %v", err)
+			}
+		}
+	}
 }
 
 func (a *App) AddService(s service.Runable) {
@@ -123,7 +159,8 @@ func NewApp(opts ...Option) *App {
 		},
 		Container: container.NewContainer(),
 		Log:       log,
-		stopChan: make(chan os.Signal),
+		chSignal: make(chan os.Signal, 1),
+		mtx:       &sync.Mutex{},
 	}
 	for _, opt := range opts {
 		opt(app)

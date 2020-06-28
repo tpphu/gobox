@@ -1,9 +1,9 @@
 package main
 
-import(
+import (
 	"flag"
 	"github.com/tpphu/gobox/app"
-	"github.com/tpphu/gobox/example/handler"
+	"github.com/tpphu/gobox/service/http"
 )
 
 func main() {
@@ -15,11 +15,13 @@ func main() {
 	app := app.NewApp(
 		app.Name("test"),
 		app.Description("test"),
-		app.WithHTTPService(":3000"),)
-	app.Init()
-	httpService := app.GetHTTPService()
-	product  := &handler.Product{}
-	app.Provide(product)
-	httpService.GET("/product/:id", product.Get)
+		//app.WithHTTPService(":3000"),
+	)
+	//app.Init()
+	httpService := http.NewGinService(app.Name)
+	//product  := &handler.Product{}
+	//app.Provide(product)
+	//httpService.GET("/product/:id", product.Get)
+	app.AddService(httpService)
 	app.Run()
 }
