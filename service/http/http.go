@@ -1,7 +1,6 @@
 package http
 
 import (
-	"context"
 	"errors"
 	"github.com/tpphu/gobox/logger"
 	"github.com/tpphu/gobox/service"
@@ -53,9 +52,9 @@ func (s *Http) Run() error {
 	return nil
 }
 
-func (s *Http) Shutdown(ctx context.Context) error {
+func (s *Http) Shutdown() error {
 	if s.ginService != nil {
-		return s.ginService.Shutdown(ctx)
+		return s.ginService.Shutdown()
 	}
 	return errors.New("no no ")
 }

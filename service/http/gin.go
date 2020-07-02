@@ -71,7 +71,7 @@ func (gs *ginService) Init() error {
 	gs.Engine = gin.New()
 	gs.Use(logger.HttpLogger(gs.logger), gin.Recovery())
 	gs.GET("/ping", func(c *gin.Context) {
-		time.Sleep(10 *time.Second)
+		time.Sleep(5 *time.Second)
 		c.String(200, "pong")
 	})
 	gs.svr = &myHttpServer{
@@ -111,14 +111,18 @@ func (gs *ginService) isStarted() bool {
 	return !gs.Config.isStarted
 }
 
-func (gs *ginService) Shutdown(ctx context.Context) (err error) {
+func (gs *ginService) Shutdown() (err error) {
 	gs.mtx.Lock()
 	defer gs.mtx.Unlock()
 
 	if !gs.isStarted() || gs.svr == nil {
 		return errors.New("Server is not started")
 	}
-
+	// context: wait for 10 seconds
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		10	 * time.Second)
+	defer cancel()
 	stop := make(chan bool)
 	go func() {
 		// dummy preprocess before interrupted

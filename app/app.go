@@ -1,7 +1,6 @@
 package app
 
 import (
-	"context"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/tpphu/gobox/container"
 	"github.com/tpphu/gobox/helper"
@@ -13,7 +12,6 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
-	"time"
 )
 
 // App is main application of gobox
@@ -73,25 +71,19 @@ func (a *App) Run() {
 	}
 
 SHUTDOWN:
-	log.Info("shutdown...")
 	// starting shutting down progress...
-	a.Log.Infof("Server shutting down")
+	log.Infof("Server shutting down...")
 	a.Shutdown()
 }
 
 func (a *App) Shutdown() {
 	a.mtx.Lock()
 	defer a.mtx.Unlock()
-
 	for i := len(a.Services) - 1; i >= 0; i-- {
 		s := a.Services[i]
 		if runS, ok := s.(service.Runable); ok {
-			// context: wait for 3 seconds
-			ctx, _ := context.WithTimeout(
-				context.Background(),
-				3 * time.Second)
 			// call for shutdown
-			if err := runS.Shutdown(ctx); err != nil {
+			if err := runS.Shutdown(); err != nil {
 				a.Log.Errorf("Server Shutdown failed: %v", err)
 			}
 		}
