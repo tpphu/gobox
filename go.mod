@@ -11,6 +11,5 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0
-	github.com/tmrts/boilr v0.0.0-20170719132028-8f51ad7884c5 // indirect
 	github.com/urfave/cli/v2 v2.2.0
 )

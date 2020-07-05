@@ -11,8 +11,6 @@ import (
 	"path/filepath"
 )
 
-const pkgName = "github.com/tpphu/gobox"
-
 var Init = &cli.Command{
 	Use:   "init",
 	Short: "Initialize template required by boilr",
@@ -48,8 +46,6 @@ var Init = &cli.Command{
 			exit.Error(err)
 		}
 		//End
-		log.Info(fmt.Sprintf("tempPath %s", tempPath))
-		log.Info(fmt.Sprintf("path %s", path))
 		// Complete the template execution transaction by copying the temporary dir to the target directory.
 		if err := osutil.CopyRecursively(tempPath, svPath); err != nil {
 			exit.Error(err)
