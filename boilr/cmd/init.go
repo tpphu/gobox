@@ -7,7 +7,6 @@ import (
 	"github.com/tpphu/gobox/boilr/util/log"
 	osutil "github.com/tpphu/gobox/boilr/util/os"
 	"github.com/tpphu/gobox/boilr/util/validate"
-	"os"
 	"path/filepath"
 )
 
@@ -59,8 +58,8 @@ func getTemplatePath() (string, error) {
 	//Get GetExecutable Path
 	execPath, _ := osutil.GetExecutablePath()
 	gobxPath := filepath.Dir(execPath) + "/.."
-	//Check if file or folder exists
-	if _, err := os.Stat(gobxPath); os.IsNotExist(err) {
+	//Check if folder exists
+	if exists, err := osutil.DirExists(gobxPath); !exists {
 		return "", err
 	}
 	tempPath = gobxPath + "/example/"
