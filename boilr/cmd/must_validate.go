@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/tpphu/gobox/boilr/cmd/util"
-	boilr "github.com/tpphu/gobox/boilr/configuration"
 	"github.com/tpphu/gobox/boilr/util/exit"
 	"github.com/tpphu/gobox/boilr/util/validate"
 )
@@ -21,17 +19,5 @@ func MustValidateVarArgs(args []string, v validate.Argument) {
 func MustValidateArgs(args []string, validations []validate.Argument) {
 	if err := util.ValidateArgs(args, validations); err != nil {
 		exit.Error(err)
-	}
-}
-
-// MustValidateTemplateDir ensures that template directory is initialized.
-func MustValidateTemplateDir() {
-	isInitialized, err := boilr.IsTemplateDirInitialized()
-	if err != nil {
-		exit.Error(err)
-	}
-
-	if !isInitialized {
-		exit.Error(fmt.Errorf("Template registry is not initialized. Please run `init` command to initialize it."))
 	}
 }
