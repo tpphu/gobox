@@ -13,7 +13,7 @@ import (
 
 var Init = &cli.Command{
 	Use:   "init",
-	Short: "Initialize template required by boilr",
+	Short: "Initialize template required by gobox",
 	Run: func(c *cli.Command, _ []string) {
 		serviceName := GetStringFlag(c, "service-name")
 		resource := GetStringFlag(c, "resource")
