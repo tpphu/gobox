@@ -9,10 +9,6 @@ var Cmd = &cli.Command{
 
 // Run executes the cli-command root.
 func Run() {
-	/*Template := &cli.Command{
-		Use:   "template",
-		Short: "Run a template command",
-	}*/
 	Init.PersistentFlags().StringP("path", "p", "", "Destination path.")
 	Init.PersistentFlags().StringP("template", "t", "gin", "Template to use (gin, grpc)")
 	Init.PersistentFlags().StringP("service-name", "s", "example", "Name of service")
